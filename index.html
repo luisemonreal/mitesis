@@ -214,3 +214,110 @@
   </script>
 </body>
 </html>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Generador de Marco Teórico Personalizado</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      text-align: center;
+      padding: 40px;
+    }
+    h1 {
+      color: #333;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    input, textarea {
+      padding: 10px;
+      margin: 10px;
+      width: 80%;
+      max-width: 600px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    textarea {
+      height: 80px;
+    }
+    button {
+      padding: 10px 24px;
+      font-size: 1.1em;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #resultado {
+      font-size: 1.2em;
+      background: #fff;
+      margin: 20px auto;
+      padding: 20px;
+      max-width: 800px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📚 Generador de Frases para Marco Teórico</h1>
+
+  <form onsubmit="event.preventDefault(); generarFrase();">
+    <input type="text" id="autor" placeholder="Apellido del autor (Ej: Vygotsky)" required><br>
+    <input type="text" id="año" placeholder="Año (Ej: 1978)" required><br>
+    <textarea id="concepto" placeholder="Escribe aquí el contenido del concepto o definición" required></textarea><br>
+    <button type="submit">Generar frase académica</button>
+  </form>
+
+  <div id="resultado">Aquí aparecerá la frase generada</div>
+
+  <script>
+    const conectores = [
+      "De acuerdo con", "Según", "Como menciona", "Tal como plantea", 
+      "En palabras de", "Retomando a", "A partir de", "En concordancia con"
+    ];
+
+    const verbos = [
+      "afirma", "explica", "define", "describe", "plantea", "sostiene",
+      "argumenta", "señala", "propone", "conceptualiza", "analiza"
+    ];
+
+    const estructuras = [
+      (autor, año, verbo, concepto) => `${conectores[random(conectores)]} ${autor} (${año}), se ${verbo} que ${concepto}.`,
+      (autor, año, verbo, concepto) => `${autor} (${año}) ${verbo} que ${concepto}.`,
+      (autor, año, verbo, concepto) => `Para ${autor} (${año}), ${concepto}, lo cual se ${verbo} como un aspecto relevante del análisis teórico.`,
+      (autor, año, verbo, concepto) => `Como lo indica ${autor} (${año}), ${concepto}.`,
+      (autor, año, verbo, concepto) => `${concepto}, según ${autor} (${año}), se ${verbo} en el marco de la teoría contemporánea.`
+    ];
+
+    function random(arr) {
+      return Math.floor(Math.random() * arr.length);
+    }
+
+    function generarFrase() {
+      const autor = document.getElementById('autor').value.trim();
+      const año = document.getElementById('año').value.trim();
+      const concepto = document.getElementById('concepto').value.trim();
+
+      const verbo = verbos[random(verbos)];
+      const estructura = estructuras[random(estructuras)];
+
+      const frase = estructura(autor, año, verbo, concepto);
+      document.getElementById('resultado').textContent = frase;
+    }
+  </script>
+
+</body>
+</html>
+
