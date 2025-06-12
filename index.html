@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Diagrama de Gantt con descarga de imagen robusta</title>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/src/dom-to-image.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    input, button {
+      margin: 5px;
+      padding: 6px;
+    }
+    table {
+      margin-top: 20px;
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 700px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    #gantt_chart {
+      margin-top: 40px;
+      background: white;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+    #btnDescargar {
+      display: none;
+      margin-top: 10px;
+      padding: 8px 16px;
+      background-color: #2e86de;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 4px;
+    }
+    #btnDescargar:hover {
+      background-color: #1b4f72;
+    }
+    #mensaje {
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Generador de Diagrama de Gantt</h2>
+
+  <form id="formulario">
+    <input type="text" id="tarea" placeholder="Nombre de la tarea" required maxlength="50" />
+    <input type="date" id="inicio" required />
+    <input type="date" id="fin" required />
+    <button type="submit">Agregar tarea</button>
+  </form>
+
+  <p id="mensaje"></p>
+
+  <table id="tabla_tareas" aria-label="Tabla de tareas introducidas">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Tarea</th>
+        <th>Fecha Inicio</th>
+        <th>Fecha Fin</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <button id="btnGenerar" style="margin-top:20px;">Generar Diagrama de Gantt</button>
+  <button id="btnDescargar">Descargar Imagen</button>
+
+  <div id="gantt_chart"></div>
+
+  <script type="text/javascript">
+    google.charts.load('current', {'packages':['gantt']});
+
+    const tareas = [];
+    const maxTareas = 15;
+
+    const formulario = document.getElementById('formulario');
+    const tablaBody = document.querySelector('#tabla_tareas tbody');
+    const mensaje = document.getElementById('mensaje');
+    const btnGenerar = document.getElementById('btnGenerar');
+    const btnDescargar = document.getElementById('btnDescargar');
+    const ganttDiv = document.getElementById('gantt_chart');
+
+    formulario.addEventListener('submit', e => {
+      e.preventDefault();
+      mensaje.textContent = "";
+
+      if (tareas.length >= maxTareas) {
+        mensaje.textContent = "Has alcanzado el máximo de 15 tareas.";
+        return;
+      }
+
+      const tareaNombre = document.getElementById('tarea').value.trim();
+      const inicio = document.getElementById('inicio').value;
+      const fin = document.getElementById('fin').value;
+
+      if (!tareaNombre || !inicio || !fin) {
+        mensaje.textContent = "Por favor, completa todos los campos.";
+        return;
+      }
+
+      if (new Date(inicio) > new Date(fin)) {
+        mensaje.textContent = "La fecha de inicio no puede ser mayor que la fecha de fin.";
+        return;
+      }
+
+      tareas.push({
+        id: 'T' + tareas.length,
+        nombre: tareaNombre,
+        inicio: new Date(inicio),
+        fin: new Date(fin)
+      });
+
+      agregarFila(tareas.length, tareaNombre, inicio, fin);
+      formulario.reset();
+    });
+
+    function agregarFila(numero, nombre, inicio, fin) {
+      const fila = document.createElement('tr');
+      fila.innerHTML = `
+        <td>${numero}</td>
+        <td>${nombre}</td>
+        <td>${inicio}</td>
+        <td>${fin}</td>
+      `;
+      tablaBody.appendChild(fila);
+    }
+
+    btnGenerar.addEventListener('click', () => {
+      if (tareas.length === 0) {
+        mensaje.textContent = "Agrega al menos una tarea antes de generar el diagrama.";
+        return;
+      }
+      mensaje.textContent = "";
+      btnDescargar.style.display = "none";
+
+      google.charts.setOnLoadCallback(drawChart);
+    });
+
+    function drawChart() {
+      const data = new google.visualization.DataTable();
+      data.addColumn('string', 'ID');
+      data.addColumn('string', 'Tarea');
+      data.addColumn('date', 'Inicio');
+      data.addColumn('date', 'Fin');
+      data.addColumn('number', 'Duración');
+      data.addColumn('number', '% Completado');
+      data.addColumn('string', 'Dependencias');
+
+      const filas = tareas.map(t => [
+        t.id,
+        t.nombre,
+        t.inicio,
+        t.fin,
+        null,
+        0,
+        null
+      ]);
+      data.addRows(filas);
+
+      const options = {
+        height: 40 * tareas.length + 50,
+        gantt: {
+          criticalPathEnabled: true,
+          labelStyle: {
+            fontName: "Arial",
+            fontSize: 14,
+            color: '#555'
+          },
+          barCornerRadius: 4,
+          barHeight: 20
+        }
+      };
+
+      const chart = new google.visualization.Gantt(ganttDiv);
+      chart.draw(data, options);
+
+      // Después de dibujar, mostramos botón para descargar
+      btnDescargar.style.display = "inline-block";
+    }
+
+    btnDescargar.addEventListener('click', () => {
+      mensaje.textContent = "";
+      // Usamos dom-to-image para capturar el div completo y generar PNG
+      domtoimage.toBlob(ganttDiv)
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'diagrama_gantt.png';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+          mensaje.textContent = "Error al generar la imagen: " + error;
+        });
+    });
+  </script>
+</body>
+</html>
