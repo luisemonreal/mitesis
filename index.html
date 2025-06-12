@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Diagrama de Gantt con descarga de imagen robusta</title>
+  <title>Diagrama de Gantt con descarga de imagen a escala</title>
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/src/dom-to-image.min.js"></script>
   <style>
@@ -56,14 +56,20 @@
 <body>
   <h2>Generador de Diagrama de Gantt</h2>
 
-  <form id="formulario">
-    <input type="text" id="tarea" placeholder="Nombre de la tarea" required maxlength="50" />
-    <input type="date" id="inicio" required />
-    <input type="date" id="fin" required />
+  <form id="formulario" aria-label="Formulario para agregar tareas">
+    <input type="text" id="tarea" placeholder="Ingrese el nombre de la tarea (máx 50 caracteres)" required maxlength="50" aria-describedby="ayudaTarea" />
+    <span id="ayudaTarea" style="font-size: 0.8em; color: #555;">Nombre descriptivo de la tarea</span><br />
+
+    <input type="date" id="inicio" required aria-describedby="ayudaInicio" />
+    <span id="ayudaInicio" style="font-size: 0.8em; color: #555;">Seleccione la fecha de inicio</span><br />
+
+    <input type="date" id="fin" required aria-describedby="ayudaFin" />
+    <span id="ayudaFin" style="font-size: 0.8em; color: #555;">Seleccione la fecha de fin</span><br />
+
     <button type="submit">Agregar tarea</button>
   </form>
 
-  <p id="mensaje"></p>
+  <p id="mensaje" role="alert" aria-live="assertive"></p>
 
   <table id="tabla_tareas" aria-label="Tabla de tareas introducidas">
     <thead>
@@ -78,9 +84,9 @@
   </table>
 
   <button id="btnGenerar" style="margin-top:20px;">Generar Diagrama de Gantt</button>
-  <button id="btnDescargar">Descargar Imagen</button>
+  <button id="btnDescargar" aria-label="Descargar diagrama de Gantt como imagen">Descargar Imagen</button>
 
-  <div id="gantt_chart"></div>
+  <div id="gantt_chart" role="region" aria-label="Diagrama de Gantt"></div>
 
   <script type="text/javascript">
     google.charts.load('current', {'packages':['gantt']});
@@ -189,86 +195,34 @@
       const chart = new google.visualization.Gantt(ganttDiv);
       chart.draw(data, options);
 
-      // Después de dibujar, mostramos botón para descargar
       btnDescargar.style.display = "inline-block";
     }
 
     btnDescargar.addEventListener('click', () => {
       mensaje.textContent = "";
-      // Usamos dom-to-image para capturar el div completo y generar PNG
-      domtoimage.toBlob(ganttDiv)
-        .then(blob => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'diagrama_gantt.png';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          URL.revokeObjectURL(url);
-        })
-        .catch(error => {
-          mensaje.textContent = "Error al generar la imagen: " + error;
-        });
+
+      domtoimage.toBlob(ganttDiv, {
+        style: {
+          background: 'white',
+          padding: '10px'
+        }
+      })
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'diagrama_gantt.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      })
+      .catch(error => {
+        mensaje.textContent = "Error al generar la imagen: " + error;
+      });
     });
   </script>
 </body>
 </html>
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Generador de Marco Teórico Personalizado</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f2f5;
-      text-align: center;
-      padding: 40px;
-    }
-    h1 {
-      color: #333;
-    }
-    form {
-      margin-bottom: 20px;
-    }
-    input, textarea {
-      padding: 10px;
-      margin: 10px;
-      width: 80%;
-      max-width: 600px;
-      font-size: 1em;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    textarea {
-      height: 80px;
-    }
-    button {
-      padding: 10px 24px;
-      font-size: 1.1em;
-      background: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    #resultado {
-      font-size: 1.2em;
-      background: #fff;
-      margin: 20px auto;
-      padding: 20px;
-      max-width: 800px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-  </style>
-</head>
-<body>
 
  
